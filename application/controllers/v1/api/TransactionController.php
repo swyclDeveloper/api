@@ -1,3 +1,4 @@
+<!-- 전화 번호기반 다중 전송 데이터 처리 -->
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
@@ -9,7 +10,8 @@ class TransactionController extends API_Controller {
     }
 
 	public function transfer_post(){
-
+		//data Null 체크 구간
+		//dataNullCheck function은 core/API_Controller.php에 구현되어 있음
 		$inputData['txid_fee']		= $this->dataNullCheck($this->post('txid_fee'));
 		$inputData['txid_token']	= $this->dataNullCheck($this->post('txid_token'));
 		$inputData['fromAddr']		= $this->dataNullCheck($this->post('fromAddr'));
@@ -17,18 +19,22 @@ class TransactionController extends API_Controller {
 		$inputData['platform']		= $this->dataNullCheck($this->post('platform'));
 		$inputData['sendAddrs']		= $this->dataNullCheck($this->post('sendAddrs'));
 		
+		//데이터가 있으면, 데이터의 공백을 제거 함
 		$inputData = array_map('trim', $inputData);
 		$inputData['sendAddrsObjects'] = json_decode($inputData['sendAddrs']);
 		$key = $this->rest->key;
 		$this->load->model('UserModel');
 		$userInfo = $this->UserModel->getUserInfo(Array('key' => $key));
 		if ($userInfo){
-			$this->load->library("web3");
+			$this->load->library("web3"); //web3 라이브러리 사용
+			//versionNetwork, getSenderNonce 함수는 Web3.php 파일에 정의 되어 있음
 			$versionNetwork = $this->web3->versionNetwork();
 			$standardNonce = $this->web3->getSenderNonce();
 			if ($versionNetwork->error || $standardNonce->error){
 				if (!$i1Result){$this->response(['status' => false, 'res_code' => '002','message' => 'Server Error'], 500);}
 			}
+
+			
 			$transData['user_sid']		= $userInfo->sid;
 			$transData['platform']		= $inputData['platform'];
 			$transData['txid']			= '';
